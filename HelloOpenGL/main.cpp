@@ -114,6 +114,9 @@ int main()
         // Activate the shader first
         ourShader.use();
 
+        float offset = 0.0f;
+        ourShader.setFloat("xOffset", offset);
+
         // float timeValue = glfwGetTime();
         // float greenValue = (sin(timeValue) / 2.f) + 0.5f;
         // int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
