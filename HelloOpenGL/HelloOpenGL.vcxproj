@@ -19,15 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="glad.c" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Shader.h" />
+    <ClInclude Include="src\Shader.h" />
+    <ClInclude Include="src\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="3.3.fragment.glsl" />
-    <Content Include="3.3.vertex.glsl" />
+    <Content Include="resources\awesomeface.png" />
+    <Content Include="resources\Kakule.jpg" />
+    <Content Include="src\3.3.fragment.glsl" />
+    <Content Include="src\3.3.vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\container.jpg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -1,9 +1,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include "Shader.h"
-
 #include <iostream>
+#include "Shader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -11,6 +11,8 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+float mix = 0.2f;
 
 int main()
 {
@@ -37,44 +39,26 @@ int main()
     }
 
     // Build and compile the shader program
-    Shader ourShader("3.3.vertex.glsl", "3.3.fragment.glsl");
+    Shader ourShader("./src/3.3.vertex.glsl", "./src/3.3.fragment.glsl");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     float vertices[] = {
-        // positions         // colors
-        0.5f, -0.5f, 0.f,  1.f, 0.f, 0.f,   // bottom right
-        -0.5f, -0.5f, 0.f,  0.f, 1.f, 0.f,   // bottom left
-        0.f,  0.5f, 0.f,  0.f, 0.f, 1.f    // top 
-        // Star shape
-        // 0.f, -0.25f, 0.f,
-        // 0.3f, -0.f, 0.f,
-        // 0.2f, 0.35f, 0.f,
-        // -0.2f, 0.35f, 0.f,
-        // -0.3f, -0.f, 0.f,
-        // 0.4f, -0.48f, 0.f,
-        // 0.55f, 0.35f, 0.f,
-        // 0.f, 0.8f, 0.f,
-        // -0.55f, 0.35f, 0.f,
-        // -0.4f, -0.48f, 0.f
+        // positions         // colors          // texture coords
+        0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+        0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.5f, 0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f // top left  
     };
 
     unsigned int indices[] = {
-        // Star shape
-        0, 3, 4,
-        0, 2, 3,
-        0, 1, 2,
-        0, 1, 5,
-        1, 2, 6,
-        2, 3, 7,
-        3, 4, 8,
-        4, 0, 9
+        0, 1, 3,
+        1, 2, 3
     };
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -83,17 +67,19 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    int stride = 8 * sizeof(float);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0);
     // If you unbind EBO before VAO, it is unbound from the VAO too (unlike VBO)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -101,6 +87,55 @@ int main()
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    // Load image
+    unsigned int texture1, texture2;
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Load and generate the texture
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("./resources/container.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture." << std::endl;
+    }
+    stbi_image_free(data);
+
+    // Load second image
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    data = nullptr;
+    stbi_set_flip_vertically_on_load(true);
+    data = stbi_load("./resources/Kakule.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture." << std::endl;
+    }
+    stbi_image_free(data);
+
+    ourShader.use();
+    ourShader.setInt("texture1", 0);
+    ourShader.setInt("texture2", 1);
+    
     // render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -111,22 +146,16 @@ int main()
         glClearColor(0.f, 1.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Activate the shader first
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+        ourShader.setFloat("mixValue", mix);
+        
         ourShader.use();
-
-        float offset = 0.0f;
-        ourShader.setFloat("xOffset", offset);
-
-        // float timeValue = glfwGetTime();
-        // float greenValue = (sin(timeValue) / 2.f) + 0.5f;
-        // int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        // glUniform4f(vertexColorLocation, 0.f, greenValue, 0.f, 1.f);
-
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        // glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-
-        // glBindVertexArray(0); // no need to unbind it every time 
+        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -136,6 +165,7 @@ int main()
     // optional: de-allocate all resources once they've outlived their purpose:
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     glfwTerminate();
@@ -146,7 +176,25 @@ int main()
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
         glfwSetWindowShouldClose(window, true);
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        mix += 0.01f;
+        if (mix >= 1.f)
+        {
+            mix = 1.f;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        mix -= 0.01f;
+        if (mix <= 0.1f)
+        {
+            mix = 0.1f;
+        }
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
