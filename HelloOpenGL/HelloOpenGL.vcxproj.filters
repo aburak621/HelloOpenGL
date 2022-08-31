@@ -21,9 +21,6 @@
     <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\stb_image.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -34,15 +31,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\3.3.fragment.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\3.3.vertex.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="src\container.jpg">
+    <Image Include="res\container.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

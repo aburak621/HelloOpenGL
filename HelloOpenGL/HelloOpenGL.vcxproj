@@ -33,7 +33,7 @@
     <Content Include="src\3.3.vertex.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resources\container.jpg" />
+    <Image Include="res\container.jpg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
